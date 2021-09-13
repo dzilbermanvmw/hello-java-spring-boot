@@ -1,0 +1,97 @@
+kind: DeploymentConfig
+apiVersion: apps.openshift.io/v1
+metadata:
+  name: eap-app-quay
+  namespace: jboss-eap-demo
+  
+  labels:
+    application: eap-app-quay
+    template: eap73-basic-s2i
+    template.openshift.io/template-instance-owner: 6b0b3092-cac3-48a4-a6fa-9f6d78377958
+    xpaas: '7.3'
+  
+spec:
+  strategy:
+    type: Recreate
+    recreateParams:
+      timeoutSeconds: 600
+    resources: {}
+    activeDeadlineSeconds: 21600
+  triggers:
+    - type: ConfigChange
+  replicas: 1
+  revisionHistoryLimit: 10
+  test: false
+  selector:
+    deploymentConfig: eap-app-quay
+  template:
+    metadata:
+      name: eap-app-quay
+      creationTimestamp: null
+      labels:
+        application: eap-app-quay
+        deploymentConfig: eap-app-quay
+    spec:
+      containers:
+        - resources:
+            limits:
+              memory: 1536Mi
+          readinessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - '-c'
+                - /opt/eap/bin/readinessProbe.sh
+            initialDelaySeconds: 10
+            timeoutSeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          terminationMessagePath: /dev/termination-log
+          name: eap-app
+          livenessProbe:
+            exec:
+              command:
+                - /bin/bash
+                - '-c'
+                - /opt/eap/bin/livenessProbe.sh
+            initialDelaySeconds: 60
+            timeoutSeconds: 1
+            periodSeconds: 10
+            successThreshold: 1
+            failureThreshold: 3
+          env:
+            - name: JGROUPS_PING_PROTOCOL
+              value: dns.DNS_PING
+            - name: OPENSHIFT_DNS_PING_SERVICE_NAME
+              value: eap-app-ping
+            - name: OPENSHIFT_DNS_PING_SERVICE_PORT
+              value: '8888'
+            - name: MQ_CLUSTER_PASSWORD
+              value: 5Jq5kVjb
+            - name: MQ_QUEUES
+            - name: MQ_TOPICS
+            - name: JGROUPS_CLUSTER_PASSWORD
+              value: NubuKVPe
+            - name: AUTO_DEPLOY_EXPLODED
+              value: 'false'
+            - name: ENABLE_GENERATE_DEFAULT_DATASOURCE
+              value: 'false'
+          ports:
+            - name: jolokia
+              containerPort: 8778
+              protocol: TCP
+            - name: http
+              containerPort: 8080
+              protocol: TCP
+            - name: ping
+              containerPort: 8888
+              protocol: TCP
+          imagePullPolicy: Always
+          terminationMessagePolicy: File
+          image: 'quay.io/dzilberm/jboss-eap:build-0.2.0'
+      restartPolicy: Always
+      terminationGracePeriodSeconds: 75
+      dnsPolicy: ClusterFirst
+      securityContext: {}
+      schedulerName: default-scheduler
