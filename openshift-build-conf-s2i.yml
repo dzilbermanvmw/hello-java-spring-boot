@@ -1,0 +1,26 @@
+kind: BuildConfig
+apiVersion: build.openshift.io/v1
+metadata:
+  name: hello-java-spring-boot-man
+  namespace: gitops-demo
+spec:
+  nodeSelector: null
+  output:
+    to:
+      kind: DockerImage
+      name: 'quay.io/dzilberm/hello-java-spring-boot:latest'
+    pushSecret:
+      name: quay-secret
+  resources: {}
+  strategy:
+    type: Docker
+    dockerStrategy:
+      pullSecret:
+        name: docker-hub
+      dockerfilePath: Dockerfile
+  postCommit: {}
+  source:
+    type: Git
+    git:
+      uri: 'https://github.com/dzilbermanvmw/hello-java-spring-boot'
+  runPolicy: Serial
