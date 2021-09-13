@@ -9,12 +9,13 @@ retriever: modernSCM(
   ]
 )
 
-// The name you want to give your Spring Boot application
+// The name you want to give your Application
 // Each resource related to your app will be given this name
 appName = "hello-java-spring-boot"
 
 pipeline {
     // Use the 'maven' Jenkins agent image which is provided with OpenShift 
+    // checkout and build Source code (SoringBoot in this example)
     agent { label "maven" }
     stages {
         stage("Checkout") {
@@ -25,13 +26,13 @@ pipeline {
         stage("Docker Build") {
             steps {
                 // This uploads your application's source code and performs a binary build in OpenShift
-                // This is a step defined in the shared library (see the top for the URL)
-                // (Or you could invoke this step using 'oc' commands!)
+                // This is a step defined in the shared library (see https://github.com/redhat-cop/pipeline-library.git)
+                // (Or we could invoke this step using 'oc start-build <build config>' commands!)
                 binaryBuild(buildConfigName: appName, buildFromPath: ".")
             }
         }
 
-        // You could extend the pipeline by tagging the image,
+        // We could extend the pipeline by tagging the image,
         // or deploying it to a production environment, etc......
     }
 }
